@@ -1,0 +1,24 @@
+
+^["@/pico/pico.ceu"]
+
+pico.set.title("Ceu Invaders")
+pico.set.size([244, 256])
+
+spawn {
+    var player = [[16, 200], [15, 8]]
+    par-or {
+        every :Pico.Draw {
+            pico.set.color.draw([32, 255, 32, 255])
+            pico.output.draw.rect(player)
+        }
+    } with {
+        every :Pico.Key.Dn {
+            match it.key {
+                == :Key-Left  => set player[0][0] = player[0][0] - 4
+                == :Key-Right => set player[0][0] = player[0][0] + 4
+            }
+        }
+    }
+}
+
+pico.loop()
