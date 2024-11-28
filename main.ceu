@@ -4,21 +4,67 @@
 pico.set.title("Ceu Invaders")
 pico.set.size([244, 256])
 
-spawn {
-    var player = [[16, 200], [15, 8]]
+val SHOT_COLOR = [255, 255, 255, 255]
+
+task Shot (pos :XY, dy) {
     par-or {
-        every :Pico.Draw {
-            pico.set.color.draw([32, 255, 32, 255])
-            pico.output.draw.rect(player)
+        await(:collided)
+    } with {
+        every :Pico.Frame {
+            set pos.y = pos.y + dy;
         }
     } with {
+        every :Pico.Draw {
+            pico.set.color.draw(SHOT_COLOR)
+            pico.output.draw.rect([pos, [1, 7]])
+        }
+    }
+    ;;pub
+}
+
+var lives = 3
+
+val CANNON_START_X = 16
+val CANNON_Y = 216
+val CANNON_DX = 4
+
+task Cannon () {
+    var pos :XY = [CANNON_START_X, CANNON_Y]
+    var dlr = [0, 0] ;; delta left and right
+
+    par-or {
         every :Pico.Key.Dn {
             match it.key {
-                == :Key-Left  => set player[0][0] = player[0][0] - 4
-                == :Key-Right => set player[0][0] = player[0][0] + 4
+                == :Key-Left  => set dlr[0] = 4
+                == :Key-Right => set dlr[1] = 4
+                == :Key-Q => spawn Shot(pos, -3)
             }
+        }
+    } with {
+        every :Pico.Key.Up {
+            match it.key {
+                == :Key-Left  => set dlr[0] = 0
+                == :Key-Right => set dlr[1] = 0
+            }
+        }
+    } with {
+        every :Pico.Frame {
+            set pos.x = pos.x + (dlr[1] - dlr[0])
+        }
+    } with {
+        every :Pico.Draw {
+            pico.set.color.draw([32, 255, 32, 255])
+            pico.output.draw.rect([pos, [15, 8]])
         }
     }
 }
 
+spawn Cannon()
+
 pico.loop()
+;;;
+
+
+
+;;;
+
