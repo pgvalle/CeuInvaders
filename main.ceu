@@ -8,10 +8,13 @@ val SHOT_COLOR = [255, 255, 255, 255]
 
 task Shot (pos :XY, dy) {
     par-or {
-        await(:collided)
-    } with {
-        every :Pico.Frame {
-            set pos.y = pos.y + dy;
+        do :aa {
+            every :Pico.Frame {
+                set pos.y = pos.y + dy;
+                ifs {
+                    pos.y <= 10 => escape(:aa)
+                }
+            }
         }
     } with {
         every :Pico.Draw {
@@ -19,7 +22,6 @@ task Shot (pos :XY, dy) {
             pico.output.draw.rect([pos, [1, 7]])
         }
     }
-    ;;pub
 }
 
 var lives = 3
@@ -28,17 +30,24 @@ val CANNON_START_X = 16
 val CANNON_Y = 216
 val CANNON_DX = 4
 
+val shots = tasks(5)
+
 task Cannon () {
     var pos :XY = [CANNON_START_X, CANNON_Y]
     var dlr = [0, 0] ;; delta left and right
-
+    
     par-or {
         every :Pico.Key.Dn {
             match it.key {
-                == :Key-Left  => set dlr[0] = 4
-                == :Key-Right => set dlr[1] = 4
-                == :Key-Q => spawn Shot(pos, -3)
+                == :Key-Left  => set dlr[0] = CANNON_DX
+                == :Key-Right => set dlr[1] = CANNON_DX
             }
+        }
+    } with {
+        loop {
+            await <1:s>
+            await(:Pico.Key.Dn | it.key == :Key-Q)
+            spawn Shot(copy(pos), -3) in shots
         }
     } with {
         every :Pico.Key.Up {
