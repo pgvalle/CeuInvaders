@@ -1,10 +1,22 @@
-
 ^["@/pico/pico.ceu"]
 
 pico.set.title("Ceu Invaders")
 pico.set.size([244, 256])
 
 val SHOT_COLOR = [255, 255, 255, 255]
+
+val explosions = tasks(5)
+
+task Explosion(pos :XY, lifetime) {
+    par-or {
+        await <lifetime:s>
+    } with {
+        every :Pico.Draw {
+            pico.set.color.draw([32, 255, 32, 255])
+            pico.output.draw.rect([pos, [13, 8]])
+        }
+    }
+}
 
 task Shot (pos :XY, dy) {
     par-or {
@@ -16,6 +28,8 @@ task Shot (pos :XY, dy) {
                 }
             }
         }
+
+        spawn Explosion(copy(pos), 0.3) in explosions
     } with {
         every :Pico.Draw {
             pico.set.color.draw(SHOT_COLOR)
@@ -31,6 +45,7 @@ val CANNON_Y = 216
 val CANNON_DX = 4
 
 val shots = tasks(5)
+
 
 task Cannon () {
     var pos :XY = [CANNON_START_X, CANNON_Y]
