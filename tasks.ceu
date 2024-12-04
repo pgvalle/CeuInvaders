@@ -1,0 +1,80 @@
+^["constants.ceu"]
+
+val explosions = tasks(5)
+val shots = tasks(5)
+
+task Explosion(pos :XY, lifetime, img) {
+    par-or {
+        await <lifetime:s>
+    } with {
+        every :Pico.Draw {
+            pico.set.image.crop(nil)
+            pico.output.draw.image(pos, img)
+        }
+    }
+}
+
+task Shot(pos :XY, dy) {
+    par-or {
+        every :Pico.Frame {
+            set pos.y = pos.y + dy;
+            if pos.y <= 10 {
+                val exp_pos = [pos.x - 3, pos.y]
+                spawn Explosion(exp_pos, 0.3, IMG_EXP2) in explosions
+                break()
+            }
+        }
+    } with {
+        every :Pico.Draw {
+            pico.set.color.draw(WHITE)
+            pico.output.draw.rect([pos, [1, 7]])
+        }
+    }
+}
+
+
+val CANNON_START_X = 16
+val CANNON_Y = 216
+val CANNON_DX = 4
+
+
+task Cannon () {
+    var pos :XY = [CANNON_START_X, CANNON_Y]
+    var l = 0
+    var r = 0
+    
+    par-or {
+        every :Pico.Key.Dn {
+            match it.key {
+                == :Key-Left  => set l = CANNON_DX
+                == :Key-Right => set r = CANNON_DX
+            }
+        }
+    } with {
+        loop {
+            await <1:s>
+            await(:Pico.Key.Dn | it.key == :Key-Q)
+            val shot_pos = [pos.x + 8, pos.y]
+            spawn Shot(shot_pos, -8) in shots
+        }
+    } with {
+        every :Pico.Key.Up {
+            match it.key {
+                == :Key-Left  => set l = 0
+                == :Key-Right => set r = 0
+            }
+        }
+    } with {
+        every :Pico.Frame {
+            set pos.x = pos.x + (r - l)
+        }
+    } with {
+        every :Pico.Draw {
+            pico.set.color.draw(GREEN)
+            pico.set.image.crop([[0, 0], [16, 8]])
+            pico.output.draw.image(pos, IMG_CANNON)
+            ;;pico.set.color.draw([255, 255, 255, 255])
+            ;;pico.output.draw.text(pos, "HELLO")
+        }
+    }
+}
