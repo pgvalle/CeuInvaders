@@ -8,41 +8,39 @@ pico.set.title("Ceu Invaders")
 pico.set.size([244, 256])
 pico.set.font(FONT_FILE, 8)
 pico.set.anchor(:HAnchor-Left, :VAnchor-Top)
+
 random.seed()
+
+func invader_i2yx(i) {
+    val r = 4 - math.floor(i / 11)
+    val c = i % 11
+    [64 + (16 * r), 26 + (16 * c)]
+}
 
 var lives = 3
 
 spawn {
-    ;; always draw invaders
-
-    spawn {
-        every :Pico.Draw {
-            loop inv in invaders {
-                println("hello")
-            }
-        }
-    }
-
-    ;; Populating
-
-    var x = 0
-    var y = 0
-
-    every <30:ms> {
-        set invaders[+] = [[0, 0], 0, 0]
-        while #invaders < 10
-    }
-
-    ;; moving
-
-    var i = 0
-    every <30:ms> {
-        ;; move invader
-        
+    loop i {
+        await <30:ms>
+        val pos :XY = invader_i2yx(i)
+        set invaders[+] = [pos.x, pos.y, 0, 0]
+        while #invaders < 55
     }
 }
+
+spawn {
+    ;; always draw invaders
+    every :Pico.Draw {
+        loop inv in invaders {
+            pico.set.color.draw(WHITE)
+            pico.output.draw.rect([[inv[1], inv[0]], [1, 7]])
+        }
+    }
+    ;; Populating
+}
+
+
+
 spawn Cannon()
 
 pico.loop()
-
-
