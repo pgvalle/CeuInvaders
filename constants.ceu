@@ -9,3 +9,5 @@ val IMG_INV3 = "./res/img/inv3.png"
 val IMG_EXP1 = "./res/img/exp1.png"
 val IMG_EXP2 = "./res/img/exp2.png"
 val IMG_EXP3 = "./res/img/exp3.png"
+
+val FONT_FILE = "./res/font.ttf"

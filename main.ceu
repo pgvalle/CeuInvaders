@@ -2,15 +2,45 @@
 
 ^["tasks.ceu"]
 
+var invaders = #[]
+
 pico.set.title("Ceu Invaders")
 pico.set.size([244, 256])
-pico.set.font("res/font.ttf", 8)
+pico.set.font(FONT_FILE, 8)
 pico.set.anchor(:HAnchor-Left, :VAnchor-Top)
-
 random.seed()
 
 var lives = 3
 
+spawn {
+    ;; always draw invaders
+
+    spawn {
+        every :Pico.Draw {
+            loop inv in invaders {
+                println("hello")
+            }
+        }
+    }
+
+    ;; Populating
+
+    var x = 0
+    var y = 0
+
+    every <30:ms> {
+        set invaders[+] = [[0, 0], 0, 0]
+        while #invaders < 10
+    }
+
+    ;; moving
+
+    var i = 0
+    every <30:ms> {
+        ;; move invader
+        
+    }
+}
 spawn Cannon()
 
 pico.loop()
