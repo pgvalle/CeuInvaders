@@ -1,0 +1,11 @@
+val WHITE = [255, 255, 255, 255]
+val GREEN = [32, 255, 32, 255]
+val RED = [255, 32, 32, 255]
+
+val IMG_CANNON = "./res/img/cannon.png"
+val IMG_INV1 = "./res/img/inv1.png"
+val IMG_INV2 = "./res/img/inv2.png"
+val IMG_INV3 = "./res/img/inv3.png"
+val IMG_EXP1 = "./res/img/exp1.png"
+val IMG_EXP2 = "./res/img/exp2.png"
+val IMG_EXP3 = "./res/img/exp3.png"
