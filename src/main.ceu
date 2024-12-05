@@ -1,8 +1,8 @@
 ^["@/pico/pico.ceu"]
-^["constants.ceu"]
-^["horde.ceu"]
-^["cannon.ceu"]
-^["tasks.ceu"]
+^["src/constants.ceu"]
+^["src/horde.ceu"]
+^["src/cannon.ceu"]
+^["src/tasks.ceu"]
 
 var invaders = #[]
 
