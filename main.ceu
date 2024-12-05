@@ -1,5 +1,7 @@
 ^["@/pico/pico.ceu"]
-
+^["constants.ceu"]
+^["horde.ceu"]
+^["cannon.ceu"]
 ^["tasks.ceu"]
 
 var invaders = #[]
@@ -10,8 +12,6 @@ pico.set.font(FONT_FILE, 8)
 pico.set.anchor(:HAnchor-Left, :VAnchor-Top)
 
 random.seed()
-
-
 
 spawn Horde()
 spawn Cannon()

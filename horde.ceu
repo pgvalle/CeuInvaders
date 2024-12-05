@@ -1,0 +1,77 @@
+task Horde() {
+    var invaders = #[]
+
+    ;; draw invaders regardless of horde state
+    spawn {
+        every :Pico.Draw {
+            loop inv :Invader in invaders {
+                ;; match type to correct image and rectangle size
+                val [crop_size, img] = match inv.type {
+                    0 => [[8, 8], IMG_INV1]
+                    1 => [[11, 8], IMG_INV2]
+                    2 => [[12, 8], IMG_INV3]
+                }
+
+                ;; match state to correct movement animation frame
+                val crop_x = match inv.state {
+                    :InvaderState.Up => 0
+                    :InvaderState.Dn => crop_size[0]
+                }
+
+                ;; crop_x == nil <-> invader dead (not rendering dead invader)
+                if (crop_x) {
+                    pico.set.image.crop([[crop_x, 0], crop_size])
+                    pico.output.draw.image(inv.pos, img)
+                }
+            }
+        }
+    }
+
+    ;; populating horde. Add one invader each frame
+    loop i in {0 => 55{ {
+        val row = 4 - math.floor(i / 11)
+        val col = i % 11
+
+        val pos = [26 + (16 * col), 64 + (16 * row)]
+        val type = match row {
+            0 => 0
+            1 => 0
+            2 => 1
+            3 => 1
+            4 => 2
+        }
+        set invaders[+] = [pos, type, :InvaderState.Up]
+    
+        await(:Pico.Frame)
+    }
+
+    var dx = 2
+
+    ;; moving horde. Move one invader at a time
+    loop {
+        var dy = 0
+
+        ;; check if it's time to turn when all invaders are up-to-date
+        loop inv :Invader in invaders {
+            if (inv.pos.x < 12) or (inv.pos.x > 200) {
+                set dx = -dx ;; flip
+                set dy = 8 ;; also move down while turning
+                break()
+            }
+        }
+
+        ;; update one invader every frame
+        loop inv :Invader in invaders {
+            await(:Pico.Frame)
+
+            set inv.pos = [inv.pos.x + dx, inv.pos.y + dy]
+            set inv.state = match inv.state {
+                ;; animate invaders
+                :InvaderState.Up => :InvaderState.Dn
+                :InvaderState.Dn => :InvaderState.Up
+                ;; dead invaders remain dead
+                :InvaderState.Dead => :InvaderState.Dead
+            }
+        }
+    }
+}
