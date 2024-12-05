@@ -1,7 +1,7 @@
 ^["constants.ceu"]
 
-enum :State { Dead, Up, Down }
-data :Invader = [pos:XY, type, state]
+enum :InvaderState { Dead, Up, Down }
+data :Invader = [pos :XY, type, state]
 
 val explosions = tasks(5)
 val shots = tasks(1)
@@ -74,48 +74,60 @@ task Cannon () {
 }
 
 task Horde() {
-    func i2xy(i) {
-        val r = 4 - math.floor(i / 11)
-        val c = i % 11
-        [26 + (16 * c), 64 + (16 * r)]
-    }
-
-    func i2type(i) {
-        i % 2
-    }
-
     var invaders = #[]
 
     ;; draw invaders regardless of horde state
     spawn {
         every :Pico.Draw {
-            loop inv:Invader in invaders {
-                val clr = match inv.state {
-                    :State.Up => WHITE
-                    :State.Dn => RED
-                    :State.Dead => {}
+            loop inv :Invader in invaders {
+                val [crop_size, img] = match inv.type {
+                    0 => [[8, 8], IMG_INV1]
+                    1 => [[11, 8], IMG_INV2]
+                    2 => [[12, 8], IMG_INV3]
                 }
-                if clr {
-                    pico.set.color.draw(clr)
-                    pico.output.draw.rect([inv.pos, [12, 8]])
+
+                val crop_x = match inv.state {
+                    :InvaderState.Up => 0
+                    :InvaderState.Dn => crop_size[0]
+                }
+
+                if (crop_x) {
+                    pico.set.image.crop([[crop_x, 0], crop_size])
+                    pico.output.draw.image(inv.pos, img)
                 }
             }
         }
     }
 
-    ;; populating horde
-    loop i in {0 => 55{ {
-        set invaders[+] = [i2xy(i), i2type(i), :State.Up]
-        await <30:ms>
+    func new_inv(i) {
+        val row = 4 - math.floor(i / 11)
+        val col = i % 11
+
+        val pos = [26 + (16 * col), 64 + (16 * row)]
+        val type = match row {
+            0 => 0
+            1 => 0
+            2 => 1
+            3 => 1
+            4 => 2
+        }
+
+        [pos, type, :InvaderState.Up]
     }
 
-    ;; moving
+    ;; populating horde
+    loop i in {0 => 55{ {
+        set invaders[+] = new_inv(i)
+        await(:Pico.Frame)
+    }
+
     var dx = 2
 
+    ;; moving
     loop {
         var dy = 0
 
-        loop inv:Invader in invaders {
+        loop inv :Invader in invaders {
             if (inv.pos.x < 12) or (inv.pos.x > 200) {
                 set dx = -dx
                 set dy = 8
@@ -123,14 +135,16 @@ task Horde() {
             }
         }
 
-        loop inv:Invader in invaders {
-            await <15:ms>
+        loop inv :Invader in invaders {
+            await(:Pico.Frame)
 
             set inv.pos = [inv.pos.x + dx, inv.pos.y + dy]
             set inv.state = match inv.state {
-                :State.Up => :State.Dn
-                :State.Dn => :State.Up
-                :State.Dead => :State.Dead
+                ;; animate invaders
+                :InvaderState.Up => :InvaderState.Dn
+                :InvaderState.Dn => :InvaderState.Up
+                ;; dead invaders remain dead
+                :InvaderState.Dead => :InvaderState.Dead
             }
         }
     }
