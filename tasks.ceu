@@ -4,12 +4,10 @@ enum :State { Dead, Up, Down }
 data :Invader = [pos:XY, type, state]
 
 val explosions = tasks(5)
-val shots = tasks(5)
+val shots = tasks(1)
 
 task Explosion(pos :XY, lifetime, img) {
-    par-or {
-        await <lifetime:s>
-    } with {
+    watching <lifetime:s> {
         every :Pico.Draw {
             pico.set.image.crop(nil)
             pico.output.draw.image(pos, img)
@@ -22,8 +20,6 @@ task Shot(pos :XY, dy) {
         every :Pico.Frame {
             set pos.y = pos.y + dy;
             if pos.y <= 10 {
-                val exp_pos = [pos.x - 3, pos.y]
-                spawn Explosion(exp_pos, 0.3, IMG_EXP2) in explosions
                 break()
             }
         }
@@ -33,6 +29,7 @@ task Shot(pos :XY, dy) {
             pico.output.draw.rect([pos, [1, 7]])
         }
     }
+    spawn Explosion([pos.x - 3, pos.y], 0.3, IMG_EXP2) in explosions
 }
 
 
@@ -46,25 +43,22 @@ task Cannon () {
     var l = 0
     var r = 0
     
-    par-or {
+    par {
         every :Pico.Key.Dn {
             match it.key {
-                == :Key-Left  => set l = CANNON_DX
-                == :Key-Right => set r = CANNON_DX
+                :Key-Left  => set l = CANNON_DX
+                :Key-Right => set r = CANNON_DX
             }
         }
     } with {
-        loop {
-            await <1:s>
-            await(:Pico.Key.Dn | it.key == :Key-Q)
-
+        every (:Pico.Key.Dn | it.key == :Key-Q) {
             spawn Shot([x + 8, CANNON_Y - 8], -8) in shots
         }
     } with {
         every :Pico.Key.Up {
             match it.key {
-                == :Key-Left  => set l = 0
-                == :Key-Right => set r = 0
+                :Key-Left  => set l = 0
+                :Key-Right => set r = 0
             }
         }
     } with {
@@ -96,21 +90,23 @@ task Horde() {
     spawn {
         every :Pico.Draw {
             loop inv:Invader in invaders {
-                match inv.state {
-                    :State.Up => pico.set.color.draw(WHITE)
-                    :State.Dn => pico.set.color.draw(RED)
+                val clr = match inv.state {
+                    :State.Up => WHITE
+                    :State.Dn => RED
                     :State.Dead => {}
                 }
-                pico.output.draw.rect([inv.pos, [12, 8]])
+                if clr {
+                    pico.set.color.draw(clr)
+                    pico.output.draw.rect([inv.pos, [12, 8]])
+                }
             }
         }
     }
 
     ;; populating horde
-    loop i {
+    loop i in {0 => 55{ {
         set invaders[+] = [i2xy(i), i2type(i), :State.Up]
         await <30:ms>
-        while #invaders < 55
     }
 
     ;; moving
