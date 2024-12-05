@@ -1,5 +1,8 @@
 ^["constants.ceu"]
 
+enum :State { Dead, Up, Down }
+data :Invader = [pos:XY, type, state]
+
 val explosions = tasks(5)
 val shots = tasks(5)
 
@@ -33,13 +36,13 @@ task Shot(pos :XY, dy) {
 }
 
 
-val CANNON_START_X = 16
+val CANNON_X_START = 16
 val CANNON_Y = 216
 val CANNON_DX = 4
 
 
 task Cannon () {
-    var pos :XY = [CANNON_START_X, CANNON_Y]
+    var x = CANNON_X_START
     var l = 0
     var r = 0
     
@@ -54,8 +57,8 @@ task Cannon () {
         loop {
             await <1:s>
             await(:Pico.Key.Dn | it.key == :Key-Q)
-            val shot_pos = [pos.x + 8, pos.y]
-            spawn Shot(shot_pos, -8) in shots
+
+            spawn Shot([x + 8, CANNON_Y - 8], -8) in shots
         }
     } with {
         every :Pico.Key.Up {
@@ -66,15 +69,73 @@ task Cannon () {
         }
     } with {
         every :Pico.Frame {
-            set pos.x = pos.x + (r - l)
+            set x = x + (r - l)
         }
     } with {
         every :Pico.Draw {
-            pico.set.color.draw(GREEN)
             pico.set.image.crop([[0, 0], [16, 8]])
-            pico.output.draw.image(pos, IMG_CANNON)
-            ;;pico.set.color.draw([255, 255, 255, 255])
-            ;;pico.output.draw.text(pos, "HELLO")
+            pico.output.draw.image([x, CANNON_Y], IMG_CANNON)
+        }
+    }
+}
+
+task Horde() {
+    func i2xy(i) {
+        val r = 4 - math.floor(i / 11)
+        val c = i % 11
+        [26 + (16 * c), 64 + (16 * r)]
+    }
+
+    func i2type(i) {
+        i % 2
+    }
+
+    var invaders = #[]
+
+    ;; draw invaders regardless of horde state
+    spawn {
+        every :Pico.Draw {
+            loop inv:Invader in invaders {
+                match inv.state {
+                    :State.Up => pico.set.color.draw(WHITE)
+                    :State.Dn => pico.set.color.draw(RED)
+                    :State.Dead => {}
+                }
+                pico.output.draw.rect([inv.pos, [12, 8]])
+            }
+        }
+    }
+
+    ;; populating horde
+    loop i {
+        set invaders[+] = [i2xy(i), i2type(i), :State.Up]
+        await <30:ms>
+        while #invaders < 55
+    }
+
+    ;; moving
+    var dx = 2
+
+    loop {
+        var dy = 0
+
+        loop inv:Invader in invaders {
+            if (inv.pos.x < 12) or (inv.pos.x > 200) {
+                set dx = -dx
+                set dy = 8
+                break()
+            }
+        }
+
+        loop inv:Invader in invaders {
+            await <15:ms>
+
+            set inv.pos = [inv.pos.x + dx, inv.pos.y + dy]
+            set inv.state = match inv.state {
+                :State.Up => :State.Dn
+                :State.Dn => :State.Up
+                :State.Dead => :State.Dead
+            }
         }
     }
 }
