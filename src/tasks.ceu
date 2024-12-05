@@ -1,6 +1,3 @@
-enum :InvaderState { Dead, Up, Down }
-data :Invader = [pos :XY, type, state]
-
 val explosions = tasks(5)
 val shots = tasks(1)
 
@@ -14,10 +11,17 @@ task Explosion(pos :XY, lifetime, img) {
 }
 
 task Shot(pos :XY, dy) {
+    var img = nil
+
     par-or {
         every :Pico.Frame {
             set pos.y = pos.y + dy;
-            if pos.y <= 10 {
+            set img = match pos.y {
+                <= 10 => IMG_EXP2
+                >= 240 => IMG_EXP3
+            }
+
+            if img {
                 break()
             }
         }
@@ -27,6 +31,8 @@ task Shot(pos :XY, dy) {
             pico.output.draw.rect([pos, [1, 7]])
         }
     }
+    
+    spawn Explosion([pos.x - 3, pos.y], 0.3, img) in explosions
 
-    spawn Explosion([pos.x - 3, pos.y], 0.3, IMG_EXP2) in explosions
+    broadcast(:AAA)
 }
