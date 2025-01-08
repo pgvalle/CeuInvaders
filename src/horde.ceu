@@ -1,6 +1,8 @@
 enum :InvaderState { Dead, Up, Down }
 data :Invader = [pos :XY, type, state]
 
+val horde_shots = tasks(1)
+
 task Horde() {
     var invaders = #[]
 
@@ -9,21 +11,21 @@ task Horde() {
         every :Pico.Draw {
             loop inv :Invader in invaders {
                 ;; match type to correct image and rectangle size
-                val [crop_size, img] = match inv.type {
+                val [crop_wh, img] = match inv.type {
                     0 => [[ 8, 8], IMG_INV1]
                     1 => [[11, 8], IMG_INV2]
                     2 => [[12, 8], IMG_INV3]
                 }
 
                 ;; match state to correct movement animation frame
-                val crop_x = match inv.state {
-                    :InvaderState.Up => 0
-                    :InvaderState.Dn => crop_size[0]
+                val crop_xy = match inv.state {
+                    :InvaderState.Dn => [0, 0]
+                    :InvaderState.Up => [crop_wh[0], 0]
                 }
 
-                ;; crop_x == nil <-> invader dead (not rendering dead invader)
-                if crop_x {
-                    pico.set.image.crop([[crop_x, 0], crop_size])
+                ;; crop_xy == nil means invader dead so don't render
+                if crop_xy {
+                    pico.set.image.crop([crop_xy, crop_wh])
                     pico.output.draw.image(inv.pos, img)
                 }
             }
@@ -43,7 +45,7 @@ task Horde() {
             3 => 1
             4 => 2
         }
-        set invaders[+] = [pos, type, :InvaderState.Up]
+        set invaders[+] = [pos, type, :InvaderState.Dn]
     
         await(:Pico.Frame)
     }

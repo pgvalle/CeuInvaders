@@ -2,37 +2,53 @@ val CANNON_X_START = 16
 val CANNON_Y = 216
 val CANNON_DX = 4
 
+val cannon_shots = tasks(1)
+
 task Cannon () {
     var x = CANNON_X_START
     var l = 0
     var r = 0
-    
-    par {
-        every :Pico.Key.Dn {
-            match it.key {
-                :Key-Left  => set l = CANNON_DX
-                :Key-Right => set r = CANNON_DX
-            }
-        }
-    } with {
-        every :Pico.Key.Dn | it.key == :Key-Q {
-            spawn Shot([x + 8, CANNON_Y - 8], -8) in cannon_shots
-        }
-    } with {
-        every :Pico.Key.Up {
-            match it.key {
-                :Key-Left  => set l = 0
-                :Key-Right => set r = 0
-            }
-        }
-    } with {
-        every :Pico.Frame {
-            set x = x + (r - l)
-        }
-    } with {
+    var crop_xy = [0, 0]
+
+    ;; render cannon
+    spawn {
         every :Pico.Draw {
-            pico.set.image.crop([[0, 0], [16, 8]])
+            pico.set.image.crop([crop_xy, [16, 8]])
             pico.output.draw.image([x, CANNON_Y], IMG_CANNON)
+        }
+    }
+    
+    watching :Pico.Key.Dn | it.key == :Key-Up {
+        par-or {
+            every :Pico.Key.Dn {
+                match it.key {
+                    ;; movement
+                    :Key-Left  => set l = CANNON_DX
+                    :Key-Right => set r = CANNON_DX
+                    ;; shooting
+                    :Key-Q => spawn Shot([x + 8, CANNON_Y - 8], -8) in cannon_shots
+                }
+            }
+        } with {
+            every :Pico.Key.Up {
+                match it.key {
+                    :Key-Left  => set l = 0
+                    :Key-Right => set r = 0
+                }
+            }
+        } with {
+            every :Pico.Frame {
+                set x = x + (r - l)
+            }
+        }
+    }
+
+    watching <2:s> {
+        loop {
+            set crop_xy = [16, 0]
+            await <0.1:s>
+            set crop_xy = [32, 0]
+            await <0.1:s>
         }
     }
 }
