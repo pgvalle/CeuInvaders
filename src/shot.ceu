@@ -1,0 +1,34 @@
+task Shot(pos :XY, dy) {
+    var should_explode = true
+    val exposion_img = match dy {
+        <= 0 => IMG_EXP2
+        else => IMG_EXP3
+    }
+
+    par-or {
+        await(:collided)
+    } with {
+        every :Pico.Draw {
+            pico.set.color.draw(WHITE)
+            pico.output.draw.rect([pos, [1, 7]])
+        }
+    } with {
+        watching | bye_bye_shot() {
+            every :Pico.Frame {
+                set pos.y = pos.y + dy
+            }
+        } where {
+            val bye_bye_shot = func () {
+                ifs {
+                    pos.y <= 10  => true
+                    pos.y >= 240 => true
+                    else         => false
+                }
+            }
+        }
+    }
+
+    if should_explode {
+        await spawn Explosion([pos.x - 3, pos.y], 0.3, exposion_img)
+    }
+}

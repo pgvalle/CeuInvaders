@@ -1,8 +1,6 @@
 enum :InvaderState { Dead, Up, Down }
 data :Invader = [pos :XY, type, state]
 
-val horde_shots = tasks(1)
-
 task Horde() {
     var invaders = #[]
 
@@ -12,7 +10,7 @@ task Horde() {
             loop inv :Invader in invaders {
                 ;; match type to correct image and rectangle size
                 val [crop_size, img] = match inv.type {
-                    0 => [[8, 8], IMG_INV1]
+                    0 => [[ 8, 8], IMG_INV1]
                     1 => [[11, 8], IMG_INV2]
                     2 => [[12, 8], IMG_INV3]
                 }
@@ -61,28 +59,38 @@ task Horde() {
             loop inv :Invader in invaders {
                 if (inv.pos.x < 12) or (inv.pos.x > 200) {
                     set dx = -dx ;; flip
-                    set dy = 8 ;; also move down while turning
+                    set dy = 8   ;; also move down while turning
                     break()
                 }
             }
 
-            ;; update one invader every frame
-            loop inv :Invader in invaders {
-                await(:Pico.Frame)
+            par-or {
+                await(:collided)
 
-                set inv.pos = [inv.pos.x + dx, inv.pos.y + dy]
-                set inv.state = match inv.state {
-                    ;; animate invaders
-                    :InvaderState.Up => :InvaderState.Dn
-                    :InvaderState.Dn => :InvaderState.Up
-                    ;; dead invaders remain dead
-                    :InvaderState.Dead => :InvaderState.Dead
+                ;; val i = it.i
+                ;; val pos = invaders[i].pos
+                ;; set invaders[i].state = :InvaderState.Dead
+                ;; set pos.x = pos.x - 1
+                ;; await spawn Explosion(pos, 0.3, IMG_EXP1)
+            } with {
+                ;; update one invader every frame
+                loop inv :Invader in invaders {
+                    await(:Pico.Frame)
+
+                    set inv.pos = [inv.pos.x + dx, inv.pos.y + dy]
+                    set inv.state = match inv.state {
+                        ;; animate invaders
+                        :InvaderState.Up => :InvaderState.Dn
+                        :InvaderState.Dn => :InvaderState.Up
+                        ;; dead invaders remain dead
+                        :InvaderState.Dead => :InvaderState.Dead
+                    }
                 }
             }
         }
     } with {
         await <2:s>
-        every <200:ms> {
+        every :Pico.Frame {
             spawn Shot([60, 60], 6) in horde_shots
         }
     }

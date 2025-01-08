@@ -1,0 +1,9 @@
+task Explosion(pos :XY, lifetime, img) {
+    watching <lifetime:s> {
+        every :Pico.Draw {
+            pico.set.image.crop(nil)
+            pico.output.draw.image(pos, img)
+        }
+    }
+}
+

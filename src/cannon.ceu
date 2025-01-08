@@ -15,8 +15,8 @@ task Cannon () {
             }
         }
     } with {
-        every (:Pico.Key.Dn | it.key == :Key-Q) {
-            spawn Shot([x + 8, CANNON_Y - 8], -8) in shots
+        every :Pico.Key.Dn | it.key == :Key-Q {
+            spawn Shot([x + 8, CANNON_Y - 8], -8) in cannon_shots
         }
     } with {
         every :Pico.Key.Up {

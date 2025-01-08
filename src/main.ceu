@@ -3,8 +3,8 @@
 ^["src/horde.ceu"]
 ^["src/cannon.ceu"]
 ^["src/tasks.ceu"]
-
-var invaders = #[]
+^["src/shot.ceu"]
+^["src/explosion.ceu"]
 
 pico.set.title("Ceu Invaders")
 pico.set.size(SIZE)
