@@ -1,10 +1,13 @@
 task Shot(pos :XY, dy) {
+    set pub = pos ;; for collision check
+
     var should_explode = true
     val exposion_img = match dy {
         <= 0 => IMG_EXP2
         else => IMG_EXP3
     }
 
+    ;; todo: remember collision may have chance shot don't despawn. Add field to broadcast
     par-or {
         await(:collided)
     } with {
