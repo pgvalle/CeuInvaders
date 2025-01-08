@@ -1,10 +1,11 @@
 enum :InvaderState { Dead, Up, Down }
 data :Invader = [pos :XY, type, state]
 
-val horde_shots = tasks(1)
+val horde_shot = tasks(1)
 
 task Horde() {
     var invaders = #[]
+    set pub = invaders
 
     ;; draw invaders regardless of horde state
     spawn {
@@ -93,7 +94,7 @@ task Horde() {
     } with {
         await <2:s>
         every :Pico.Frame {
-            spawn Shot([60, 60], 6) in horde_shots
+            spawn Shot([60, 60], 6) in horde_shot
         }
     }
 }
