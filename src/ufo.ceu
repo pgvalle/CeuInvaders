@@ -1,0 +1,57 @@
+data :UFODestroyed = [score]
+
+val UFO-Y = 40
+val UFO-CROP-WH :WH = [24, 8]   
+
+task UFO() {
+    ;; deside if it spawns at right and goes left or the oposite
+    var [x, dx] = match random.int(0, 1) {
+        0 => [20, 5]
+        1 => [200, -5]
+    }
+
+    ;; expose rect for collision detection
+    set pub = :Rect [[x + 4, UFO-Y], [16, 8]]
+
+    ;; wait some time to spawn
+    await(<10:s>)
+
+    ;; Spawned. Move around until get hit or until being out-of-bounds
+    watching :Collided.UFO {
+        par {
+            watching | out-of-bounds() {
+                every :Pico.Frame {
+                    set x = x + dx
+                    set pub = :Rect [[x + 4, UFO-Y], [16, 8]] ;; update public rect
+                }
+            } where {
+                val out-of-bounds = func () {
+                    match x {
+                        <= 10  => true
+                        >= 200 => true
+                        else   => false
+                    }
+                }
+            }
+        } with {
+            every :Pico.Draw {
+                pico.set.image.crop([[0, 0], UFO-CROP-WH])
+                pico.output.draw.image(pos, IMG-UFO)
+            }
+        }
+    }
+    
+    ;; UFO Killed. Render UFO Explosion
+    await spawn Explosion(pos, 1, IMG-UFO, [[x, UFO-Y], UFO-CROP-WH])
+
+    ;; Now broadcast that UFO was destroyed
+    val score = 100 * random.int(1, 3)
+    broadcast(:UFODestroyed [score]) in :global ;; todo: avoid using global
+
+    ;; render UFO score value for 1 sec
+    watching <1:s> {
+        every :Pico.Draw {
+            pico.output.draw.text(0.1||0.9, to.string(score))
+        }
+    }
+}
