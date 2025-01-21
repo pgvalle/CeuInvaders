@@ -1,0 +1,60 @@
+data :Collision = [] {
+    :Shot = [should-explode]
+    :Horde = [invader-index]
+    :UFO = []
+}
+
+spawn {
+    every :Pico.Frame {
+        var collided = false
+        val shot-tasks = to.vector(cannon-shot) <++ to.vector(horde-shot)
+
+        ;; shot-shot collision
+        if #shot-tasks == 2 {
+            val p1 :XY = shot-tasks[0].pub
+            val p2 :XY = shot-tasks[1].pub
+            val r1 :Rect = [[p1.x - 1, p1.y], [3, 7]]
+            val r2 :Rect = [[p2.x - 1, p2.y], [3, 7]]
+            
+            if pico.rect-vs-rect?(r1, r2) {
+                broadcast(:Collision.Shot [true]) in shot-tasks[0]
+                broadcast(:Collision.Shot [true]) in shot-tasks[1]
+                set collided = true
+            }
+        }
+
+        ;; shot-horde collision
+        if not collided {
+            loop shot in cannon-shot {
+                val pos :XY = shot.pub
+                val rect :Rect = [[pos.x - 1, pos.y], [3, 7]]
+                var i = 0;
+
+                loop inv :Invader in invaders {
+                    if inv.state /= :InvaderState.Dead {
+                        val invrect :Rect = match inv.tp {
+                            0 => [inv.pos, [ 8, 8]]
+                            1 => [inv.pos, [11, 8]]
+                            2 => [inv.pos, [12, 8]]
+                        }
+
+                        if pico.rect-vs-rect?(invrect, rect) {
+                            broadcast(:Collision.Horde [i]) in horde
+                            broadcast(:Collision.Shot [false]) in shot
+                            set collided = true
+                            break()
+                        }
+                    }
+
+                    set i = i + 1
+                }
+
+                
+            }
+        }
+
+        ;; shot-cannon collision
+
+        ;; shot-ufo collision
+    }
+}

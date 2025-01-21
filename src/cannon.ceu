@@ -1,20 +1,16 @@
-val CANNON_X_START = 16
-val CANNON_Y = 216
-val CANNON_DX = 4
-
-val cannon_shots = tasks(1)
+val cannon-shot = tasks(1)
 
 task Cannon () {
-    var x = CANNON_X_START
+    var x = 16
     var l = 0
     var r = 0
-    var crop_xy = [0, 0]
+    var crop-xy = [0, 0]
 
     ;; render cannon
     spawn {
         every :Pico.Draw {
-            pico.set.image.crop([crop_xy, [16, 8]])
-            pico.output.draw.image([x, CANNON_Y], IMG_CANNON)
+            pico.set.image.crop([crop-xy, [16, 8]])
+            pico.output.draw.image([x, 216], IMG-CANNON)
         }
     }
     
@@ -23,10 +19,12 @@ task Cannon () {
             every :Pico.Key.Dn {
                 match it.key {
                     ;; movement
-                    :Key-Left  => set l = CANNON_DX
-                    :Key-Right => set r = CANNON_DX
+                    :Key-Left  => set l = 4
+                    :Key-Right => set r = 4
                     ;; shooting
-                    :Key-Q => spawn Shot([x + 8, CANNON_Y - 8], -8) in cannon_shots
+                    :Key-Q => spawn Shot([x + 8, 208], -8) in cannon-shot
+                    ;; testing some stuff
+                    ;; :Key-T => broadcast(:aaaa) in :global
                 }
             }
         } with {
@@ -45,9 +43,9 @@ task Cannon () {
 
     watching <2:s> {
         loop {
-            set crop_xy = [16, 0]
+            set crop-xy = [16, 0]
             await <0.1:s>
-            set crop_xy = [32, 0]
+            set crop-xy = [32, 0]
             await <0.1:s>
         }
     }

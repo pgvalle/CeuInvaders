@@ -1,10 +1,8 @@
-val SIZE :WH = [224, 256]
-
 val WHITE = [255, 255, 255, 255]
 val GREEN = [32, 255, 32, 255]
 val RED = [255, 32, 32, 255]
 
-val IMG-CANNON = "./res/img/cannon.png"
+val IMG-SPACESHIP = "./res/img/spaceship.png"
 val IMG-UFO = "./res/img/ufo.png"
 val IMG-INV1 = "./res/img/inv1.png"
 val IMG-INV2 = "./res/img/inv2.png"
@@ -12,5 +10,9 @@ val IMG-INV3 = "./res/img/inv3.png"
 val IMG-EXP1 = "./res/img/exp1.png"
 val IMG-EXP2 = "./res/img/exp2.png"
 val IMG-EXP3 = "./res/img/exp3.png"
+
+val SFX-INVADER-KILLED = "./res/sfx/invader-killed.wav"
+val SFX-SPACESHIP-KILLED = "./res/sfx/spaceship-killed.wav"
+val SFX-SPACESHIP-SHOOT = "./res/sfx/spaceship-shoot.wav"
 
 val FONT = "./res/font.ttf"

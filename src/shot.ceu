@@ -1,27 +1,30 @@
+data :ShotData = [pos :XY, dy]
+
 task Shot(pos :XY, dy) {
     set pub = pos ;; for collision check
 
-    var should_explode = true
-    val exposion_img = match dy {
-        <= 0 => IMG_EXP2
-        else => IMG_EXP3
+    var should-explode = true
+    val exposion-img = match dy {
+        <= 0 => IMG-EXP2
+        else => IMG-EXP3
     }
 
-    ;; todo: remember collision may have chance shot don't despawn. Add field to broadcast
     par-or {
-        await(:collided)
+        await :Collision.Shot {
+            set should-explode = it.should-explode
+        }
     } with {
         every :Pico.Draw {
             pico.set.color.draw(WHITE)
             pico.output.draw.rect([pos, [1, 7]])
         }
     } with {
-        watching | bye_bye_shot() {
+        watching | out-of-bounds() {
             every :Pico.Frame {
                 set pos.y = pos.y + dy
             }
         } where {
-            val bye_bye_shot = func () {
+            val out-of-bounds = func () {
                 ifs {
                     pos.y <= 10  => true
                     pos.y >= 240 => true
@@ -31,7 +34,14 @@ task Shot(pos :XY, dy) {
         }
     }
 
-    if should_explode {
-        await spawn Explosion([pos.x - 3, pos.y], 0.3, exposion_img)
+    if should-explode {
+        watching <0.3:s> {
+            every :Pico.Draw {
+                pico.set.image.crop(nil)
+                pico.output.draw.image([pos.x - 3, pos.y], exposion-img)
+            }
+        }
     }
+
+    
 }

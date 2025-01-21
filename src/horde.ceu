@@ -1,32 +1,30 @@
 enum :InvaderState { Dead, Up, Down }
-data :Invader = [pos :XY, type, state]
+data :Invader = [pos :XY, tp, state]
 
-val horde_shot = tasks(1)
+var invaders = #[]
+val horde-shot = tasks(1)
 
 task Horde() {
-    var invaders = #[]
-    set pub = invaders
-
     ;; draw invaders regardless of horde state
     spawn {
         every :Pico.Draw {
             loop inv :Invader in invaders {
                 ;; match type to correct image and rectangle size
-                val [crop_wh, img] = match inv.type {
-                    0 => [[ 8, 8], IMG_INV1]
-                    1 => [[11, 8], IMG_INV2]
-                    2 => [[12, 8], IMG_INV3]
+                val [crop-wh, img] = match inv.tp {
+                    0 => [[ 8, 8], IMG-INV1]
+                    1 => [[11, 8], IMG-INV2]
+                    2 => [[12, 8], IMG-INV3]
                 }
 
                 ;; match state to correct movement animation frame
-                val crop_xy = match inv.state {
+                val crop-xy = match inv.state {
                     :InvaderState.Dn => [0, 0]
-                    :InvaderState.Up => [crop_wh[0], 0]
+                    :InvaderState.Up => [crop-wh[0], 0]
                 }
 
-                ;; crop_xy == nil means invader dead so don't render
-                if crop_xy {
-                    pico.set.image.crop([crop_xy, crop_wh])
+                ;; crop-xy == nil means invader dead so don't render
+                if crop-xy {
+                    pico.set.image.crop([crop-xy, crop-wh])
                     pico.output.draw.image(inv.pos, img)
                 }
             }
@@ -35,18 +33,19 @@ task Horde() {
 
     ;; populating horde. Add one invader each frame
     loop i in {0 => 55{ {
-        val row = 4 - math.floor(i / 11)
         val col = i % 11
+        val row = 4 - math.floor(i / 11)
+        val x = 26 + (16 * col)
+        val y = 64 + (16 * row)
 
-        val pos = [26 + (16 * col), 64 + (16 * row)]
-        val type = match row {
-            0 => 0
-            1 => 0
-            2 => 1
-            3 => 1
-            4 => 2
+        val [pos :XY, tp] = match row {
+            0 => [[x + 2, y], 0]
+            1 => [[x + 2, y], 0]
+            2 => [[x, y], 1]
+            3 => [[x, y], 1]
+            4 => [[x, y], 2]
         }
-        set invaders[+] = [pos, type, :InvaderState.Dn]
+        set invaders[+] = [pos, tp, :InvaderState.Dn]
     
         await(:Pico.Frame)
     }
@@ -68,33 +67,34 @@ task Horde() {
             }
 
             par-or {
-                await(:collided)
-
-                ;; val i = it.i
-                ;; val pos = invaders[i].pos
-                ;; set invaders[i].state = :InvaderState.Dead
-                ;; set pos.x = pos.x - 1
-                ;; await spawn Explosion(pos, 0.3, IMG_EXP1)
-            } with {
                 ;; update one invader every frame
                 loop inv :Invader in invaders {
-                    await(:Pico.Frame)
+                    if inv.state /= :InvaderState.Dead {
+                        set inv.pos = [inv.pos.x + dx, inv.pos.y + dy]
+                        set inv.state = match inv.state {
+                            ;; animate invaders
+                            :InvaderState.Up => :InvaderState.Dn
+                            :InvaderState.Dn => :InvaderState.Up
+                        }
 
-                    set inv.pos = [inv.pos.x + dx, inv.pos.y + dy]
-                    set inv.state = match inv.state {
-                        ;; animate invaders
-                        :InvaderState.Up => :InvaderState.Dn
-                        :InvaderState.Dn => :InvaderState.Up
-                        ;; dead invaders remain dead
-                        :InvaderState.Dead => :InvaderState.Dead
+                        await(:Pico.Frame)
                     }
+                }
+            } with {
+                await :Collision.Horde {
+                    val i = it.invader-index
+                    val invader :Invader = invaders[i]
+                    val pos :XY = invader.pos
+                    set invader.state = :InvaderState.Dead
+                    ;;set pos.x = pos.x - 1
+                    await spawn Explosion(pos, 0.3, IMG-EXP1)
                 }
             }
         }
     } with {
         await <2:s>
         every :Pico.Frame {
-            spawn Shot([60, 60], 6) in horde_shot
+            spawn Shot([60, 60], 6) in horde-shot
         }
     }
 }

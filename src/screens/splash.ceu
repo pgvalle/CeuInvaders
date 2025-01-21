@@ -1,0 +1,74 @@
+spawn {
+    val STRINGS = #[
+        " PLAY",
+        " SPACE INVADERS",
+        " *SCORE ADVANCES TABLE*",
+        " =? MYSTERY",
+        " =30 POINTS",
+        " =20 POINTS",
+        " =10 POINTS",
+        " "
+    ]
+    val X-OFFS = #[72, 32, 0, 56, 56, 56, 56, 0]
+    val Y-OFFS = #[0, 24, 56, 72, 88, 104, 120, 0]
+
+    var i = 0
+    var j = 1
+
+    spawn {
+        every :Pico.Draw {
+            loop ii in {0 => i{ {
+                val ipos = [16 + X-OFFS[ii], 64 + Y-OFFS[ii]]
+                pico.output.draw.text(ipos, STRINGS[ii])
+            }
+
+            var str = ""
+            loop jj in {0 => j{ {
+                set str[+] = STRINGS[i][jj]
+            }
+
+            val pos = [16 + X-OFFS[i], 64 + Y-OFFS[i]]
+            pico.output.draw.text(pos, str)
+
+            if (i >= 3) {
+                pico.set.image.crop([[0, 0], [24, 8]]);
+                pico.output.draw.image([59, 136], IMG-UFO);
+                pico.set.image.crop([[0, 0], [8, 8]]);
+                pico.output.draw.image([67, 152], IMG-INV1);
+                pico.set.image.crop([[0, 0], [11, 8]]);
+                pico.output.draw.image([66, 168], IMG-INV2);
+                pico.set.image.crop([[0, 0], [12, 8]]);
+                pico.output.draw.image([65, 184], IMG-INV3);
+            }
+        }
+    }
+
+    watching :Pico.Key.Dn | it.key == :Key-Up {
+        await(<1.5:s>)
+
+        loop {       
+            loop {
+                await(<50:ms>)
+                set j = j + 1
+                until j == #STRINGS[i]
+            }
+
+            set j = 1
+            set i = i + 1
+
+            if i == 2 {
+                await(<1.5:s>)
+                set i = 3
+            }
+
+            until i == (#STRINGS - 1)
+        }
+    }
+
+    set j = 1
+    set i = #STRINGS - 1
+
+    await(:Pico.Key.Dn | it.key == :Key-Up)
+}
+
+;;}}}}
