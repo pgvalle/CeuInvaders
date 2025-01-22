@@ -1,5 +1,6 @@
 ^["@/pico/pico.ceu"]
 ^["src/constants.ceu"]
+^["src/collisions.ceu"]
 
 random.seed()
 
@@ -13,14 +14,27 @@ pico.set.font(FONT, 8)
 var score = 0
 var hi-score = 0
 
+func fmt-int(value, size) {
+    var tmp = to.string(value)
+    loop {
+        until #tmp >= size
+        set tmp[+] = '0'
+    }
+    tmp
+}
+
 func draw-scoreboard() {
-    ;; ...
+    pico.output.draw.text([8, 8], "YOUR SCORE      HIGH-SCORE")
+    
+    pico.output.draw.text([24, 24], fmt-int(score, 6))
+    pico.output.draw.text([152, 24], fmt-int(hi-score, 6))
 }
 
 var credits = 0
 
 func draw-credit-counter() {
-    ;; ...
+    pico.output.draw.text([144, 240], "CREDIT")
+    pico.output.draw.text([196, 240], fmt-int(credits, 2))
 }
 
 spawn { ;; always draw scoreboard and credit counter

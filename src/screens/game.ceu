@@ -1,3 +1,5 @@
+^["src/spaceship.ceu"]
+
 do {
-    
+    await spawn Spaceship()
 }

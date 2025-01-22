@@ -2,8 +2,10 @@ data :Collision = [] {
     :Shot = [should-explode]
     :Horde = [invader-index]
     :UFO = []
+    :Spaceship = []
 }
 
+;;;
 spawn {
     every :Pico.Frame {
         var collided = false
@@ -58,3 +60,4 @@ spawn {
         ;; shot-ufo collision
     }
 }
+;;;
