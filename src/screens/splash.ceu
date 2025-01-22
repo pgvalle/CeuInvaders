@@ -1,4 +1,4 @@
-spawn {
+do {
     val STRINGS = #[
         " PLAY",
         " SPACE INVADERS",
@@ -15,22 +15,24 @@ spawn {
     var i = 0
     var j = 1
 
-    spawn {
+    par-or {
         every :Pico.Draw {
-            loop ii in {0 => i{ {
+            loop ii in {0 => i{ { ;; strings that were entirely typewritten until now
                 val ipos = [16 + X-OFFS[ii], 64 + Y-OFFS[ii]]
                 pico.output.draw.text(ipos, STRINGS[ii])
             }
 
+            ;; calculate typewrite state of STRINGS[i]
             var str = ""
             loop jj in {0 => j{ {
                 set str[+] = STRINGS[i][jj]
             }
 
+            ;; show typewrite state of STRINGS[i]
             val pos = [16 + X-OFFS[i], 64 + Y-OFFS[i]]
             pico.output.draw.text(pos, str)
 
-            if (i >= 3) {
+            if i >= 3 { ;; if showing score table, then render invader images as well
                 pico.set.image.crop([[0, 0], [24, 8]]);
                 pico.output.draw.image([59, 136], IMG-UFO);
                 pico.set.image.crop([[0, 0], [8, 8]]);
@@ -41,34 +43,35 @@ spawn {
                 pico.output.draw.image([65, 184], IMG-INV3);
             }
         }
-    }
+    } with {
+        ;; when the key is pressed, skip typewriting text
+        watching :Pico.Key.Dn | it.key == :Key-Up {
+            await(<1.5:s>)
 
-    watching :Pico.Key.Dn | it.key == :Key-Up {
-        await(<1.5:s>)
+            loop { ;; for each string in STRINGS
+                if i == 2 { ;; wait a little before showing score table
+                    await(<1.5:s>)
+                    set i = 3
+                }
 
-        loop {       
-            loop {
-                await(<50:ms>)
-                set j = j + 1
-                until j == #STRINGS[i]
+                loop { ;; typewrite each character of STRINGS[i]
+                    await(<50:ms>)
+                    set j = j + 1
+                    until j == #STRINGS[i]
+                }
+
+                set j = 1
+                set i = i + 1
+                until i == (#STRINGS - 1)
             }
-
-            set j = 1
-            set i = i + 1
-
-            if i == 2 {
-                await(<1.5:s>)
-                set i = 3
-            }
-
-            until i == (#STRINGS - 1)
         }
+
+        set j = 1
+        set i = #STRINGS - 1
+        await(:Pico.Key.Dn | it.key == :Key-Up)
     }
-
-    set j = 1
-    set i = #STRINGS - 1
-
-    await(:Pico.Key.Dn | it.key == :Key-Up)
 }
+
+^["src/screens/game.ceu"]
 
 ;;}}}}

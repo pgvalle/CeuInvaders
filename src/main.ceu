@@ -1,7 +1,6 @@
 ^["@/pico/pico.ceu"]
 ^["src/constants.ceu"]
 
-
 random.seed()
 
 pico.set.title("Ceu Invaders")
@@ -13,23 +12,28 @@ pico.set.font(FONT, 8)
 
 var score = 0
 var hi-score = 0
-var credits = 0
 
 func draw-scoreboard() {
     ;; ...
 }
 
-func draw-credits() {
+var credits = 0
+
+func draw-credit-counter() {
     ;; ...
 }
 
-spawn {
+spawn { ;; always draw scoreboard and credit counter
     every :Pico.Draw {
         draw-scoreboard()
-        draw-credits()
+        draw-credit-counter()
     }
 }
 
-^["src/screens/splash.ceu"]
+spawn { ;; infinite loop until game is closed
+    loop {
+        ^["src/screens/splash.ceu"]
+    }
+}
 
 pico.loop()
