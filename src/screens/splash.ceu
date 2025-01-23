@@ -17,15 +17,15 @@ do {
 
     par-or {
         every :Pico.Draw {
-            loop ii in {0 => i{ { ;; strings that were entirely typewritten until now
-                val ipos = [16 + X-OFFS[ii], 64 + Y-OFFS[ii]]
-                pico.output.draw.text(ipos, STRINGS[ii])
+            loop k in {0 => i{ { ;; strings that were entirely typewritten until now
+                val ipos = [16 + X-OFFS[k], 64 + Y-OFFS[k]]
+                pico.output.draw.text(ipos, STRINGS[k])
             }
 
             ;; calculate typewrite state of STRINGS[i]
             var str = ""
-            loop jj in {0 => j{ {
-                set str[+] = STRINGS[i][jj]
+            loop l in {0 => j{ {
+                set str[+] = STRINGS[i][l]
             }
 
             ;; show typewrite state of STRINGS[i]
