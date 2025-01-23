@@ -1,17 +1,25 @@
 ^["src/spaceship.ceu"]
 
 do {
-    await spawn Spaceship()
-    ;;;
-    loop {
-        watching :Pico.Key.Dn | it.key == :Key-P { ;; pause
-            ;; game here
+    val s = spawn Spaceship()
+
+    watching s {
+        par {
+            loop {
+                await(:Pico.Key.Dn | it.key == :Key-P)
+                broadcast(:Show [false]) in :global
+                await(:Pico.Key.Dn | it.key == :Key-P)
+                broadcast(:Show [true]) in :global
+            }
+        } with {
+            loop {
+                await(:Show)
+                watching :Show {
+                    every :Pico.Draw {
+                        rectangle   ;; TODO
+                    }
+                }
+            }
         }
-
-        ;; pause state here
     }
-
-    ;; over state here
-
-    ;;;
 }
