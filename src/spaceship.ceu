@@ -4,26 +4,26 @@ task Spaceship () {
     var x = 16
     var l = 0
     var r = 0
-    var crop-xy = [0, 0]
+    var uv-crop = [0, 0]
 
-    await(<2:s>) ;; being deployed
+    toggle :Show {
+        await(<2:s>)
 
-    spawn { ;; render spaceship
-        every :Pico.Draw {
-            pico.set.image.crop([crop-xy, [16, 8]])
-            pico.output.draw.image([x, 216], IMG-SPACESHIP)
+        spawn {
+            every :Pico.Draw {
+                pico.set.image.crop([uv-crop, [16, 8]])
+                pico.output.draw.image([x, 216], IMG-SPACESHIP)
+            }
         }
-    }
-    
-    watching :Collision.Spaceship { ;; deployed
+
         par-or {
+            await(:Collision.Spaceship)
+        } with {
             every :Pico.Key.Dn {
                 match it.key {
                     :Key-Left => set l = 4
                     :Key-Right => set r = 4
-                    ;;:Key-Q => spawn Shot([x + 8, 208], -8) in spaceship-shot
-                    ;; testing some stuff
-                    ;; :Key-T => broadcast(:aaaa) in :global
+                    :Key-Q => spawn Shot([x + 8, 208], -8) in spaceship-shot
                 }
             }
         } with {
@@ -38,14 +38,17 @@ task Spaceship () {
                 set x = x + (r - l)
             }
         }
-    }
 
-    watching <1.5:s> { ;; exploding state
-        loop {
-            set crop-xy = [16, 0]
-            await <0.1:s>
-            set crop-xy = [32, 0]
-            await <0.1:s>
+        watching <1.5:s> { ;; exploding state
+            loop {
+                set uv-crop = [16, 0]
+                await(<0.1:s>)
+                set uv-crop = [32, 0]
+                await(<0.1:s>)
+            }
         }
     }
 }
+
+;; testing some stuff
+;; :Key-T => broadcast(:aaaa) in :global
