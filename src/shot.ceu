@@ -1,47 +1,44 @@
-data :ShotData = [pos :XY, dy]
-
 task Shot(pos :XY, dy) {
-    set pub = pos ;; for collision check
+    set pos = copy(pos) ;; dont change values outside
 
-    var should-explode = true
-    val exposion-img = match dy {
-        <= 0 => IMG-EXP2
-        else => IMG-EXP3
+    spawn { ;; draw shot independently. Keep drawing it if paused or not paused.
+        var should-explode = true
+
+        par-or { ;; draw shot as white rectangle until it collides with smth
+            await :Collision.Shot {
+                set should-explode = it.should-explode
+            }
+        } with {
+            every :Pico.Draw {
+                pico.set.color.draw(WHITE)
+                pico.output.draw.rect([pos, [1, 7]])
+            }
+        }
+        
+        if should-explode {
+            every :Pico.Draw { ;; draw shot explosion
+                pico.set.image.crop(nil)
+                pico.output.draw.image([pos.x - 3, pos.y], match dy {
+                    <= 0 => IMG-EXP2
+                    else => IMG-EXP3
+                })
+            }
+        }
     }
 
-    par-or {
-        await :Collision.Shot {
-            set should-explode = it.should-explode
-        }
-    } with {
-        every :Pico.Draw {
-            pico.set.color.draw(WHITE)
-            pico.output.draw.rect([pos, [1, 7]])
-        }
-    } with {
-        watching | out-of-bounds() {
-            every :Pico.Frame {
-                set pos.y = pos.y + dy
-            }
-        } where {
-            val out-of-bounds = func () {
-                ifs {
-                    pos.y <= 10  => true
-                    pos.y >= 240 => true
-                    else         => false
+    loop { ;; shot state depends on pause state
+        watching :Pause.On {
+            watching :Collision.Shot {
+                every :Pico.Frame { ;; keep moving shot until it's out of bounds
+                    set pos.y = pos.y + dy
+                    until (pos.y <= 10) or (pos.y >= 240)
                 }
             }
-        }
-    }
 
-    if should-explode {
-        watching <0.3:s> {
-            every :Pico.Draw {
-                pico.set.image.crop(nil)
-                pico.output.draw.image([pos.x - 3, pos.y], exposion-img)
-            }
+            await(<EXPLOSION-TIME:s>) ;; collided or out of bounds
+            break()
         }
-    }
 
-    
+        await(:Pause.Off)
+    }
 }
