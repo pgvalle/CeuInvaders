@@ -2,6 +2,8 @@ val WHITE = [255, 255, 255, 255]
 val GREEN = [32, 255, 32, 255]
 val RED = [255, 32, 32, 255]
 
+val EXPLOSION-TIME = 0.3
+
 val IMG-SPACESHIP = "./res/img/spaceship.png"
 val IMG-UFO = "./res/img/ufo.png"
 val IMG-INV1 = "./res/img/inv1.png"
