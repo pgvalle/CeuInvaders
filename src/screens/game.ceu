@@ -2,4 +2,16 @@
 
 do {
     await spawn Spaceship()
+    ;;;
+    loop {
+        watching :Pico.Key.Dn | it.key == :Key-P { ;; pause
+            ;; game here
+        }
+
+        ;; pause state here
+    }
+
+    ;; over state here
+
+    ;;;
 }
